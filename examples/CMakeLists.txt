@@ -11,7 +11,7 @@ set(
   cisstNumerical )
 
 find_package(cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
-find_package(sawBarrett REQUIRED HINTS "${CISST_BINARY_DIR}/saw/components")
+find_package(sawBarrett REQUIRED HINTS "${cisst_saw_BINARY_DIR}/saw/components")
 
 if( cisst_FOUND AND sawBarrett_FOUND )
 
@@ -42,8 +42,8 @@ if( cisst_FOUND AND sawBarrett_FOUND )
   cisst_target_link_libraries( mtsPuckExample    ${REQUIRED_CISST_LIBRARIES} )
   cisst_target_link_libraries( mtsWAMExample     ${REQUIRED_CISST_LIBRARIES} )
 
-  find_package( sawControllers HINTS "${CISST_BINARY_DIR}/saw/components" )
-  find_package( sawKeyboard    HINTS "${CISST_BINARY_DIR}/saw/components" )
+  find_package( sawControllers HINTS "${cisst_saw_BINARY_DIR}/saw/components" )
+  find_package( sawKeyboard    HINTS "${cisst_saw_BINARY_DIR}/saw/components" )
   if( sawControllers_FOUND AND sawKeyboard_FOUND )
 
     set( 

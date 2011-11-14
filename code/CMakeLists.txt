@@ -8,7 +8,7 @@ set(
   cisstParameterTypes )
 
 find_package( cisst REQUIRED ${REQUIRED_CISST_LIBRARIES} )
-find_package( sawCANBus REQUIRED HINTS "${CISST_BINARY_DIR}/saw/components")
+find_package( sawCANBus REQUIRED HINTS "${cisst_saw_BINARY_DIR}/saw/components")
 
 if( cisst_FOUND AND sawCANBus_FOUND )
 
