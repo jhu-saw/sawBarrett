@@ -76,7 +76,11 @@ mtsWAM::mtsWAM( const std::string& name,
 
 }
 
-void mtsWAM::Startup(){}
+void mtsWAM::Startup(){
+
+  osaCPUSetAffinity( OSA_CPU4 );
+
+}
 
 void mtsWAM::Run(){
 

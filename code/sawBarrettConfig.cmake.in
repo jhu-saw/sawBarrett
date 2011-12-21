@@ -12,4 +12,3 @@
 set (sawBarrett_INCLUDE_DIR "@sawBarrett_INCLUDE_DIR@")
 set (sawBarrett_LIBRARY_DIR "@sawBarrett_LIBRARY_DIR@")
 set (sawBarrett_LIBRARIES   "@sawBarrett_LIBRARIES@")
-set (sawBarrettQt_LIBRARIES "@sawBarrettQt_LIBRARIES@")
