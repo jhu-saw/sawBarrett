@@ -1,4 +1,5 @@
 #include <cisstCommon/cmnGetChar.h>
+#include <cisstCommon/cmnPath.h>
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstOSAbstraction/osaGetTime.h>
 
@@ -14,7 +15,7 @@
 class SetPoints : public mtsTaskPeriodic {
 
 private:
-  
+
   robManipulator* manipulator;
 
   mtsFunctionWrite SetPositionCartesian;
@@ -25,10 +26,10 @@ private:
   double t;
 
 public:
-  
-  SetPoints( const std::string& robotfilename, 
+
+  SetPoints( const std::string& robotfilename,
 	     const vctFrame4x4<double>& Rtw0,
-	     const vctDynamicVector<double>& qinit ) : 
+	     const vctDynamicVector<double>& qinit ) :
     mtsTaskPeriodic( "setpoint", 0.1, true ),
     manipulator( NULL ),
     q( qinit ),
@@ -47,13 +48,13 @@ public:
       CMN_LOG_RUN_ERROR << "Failed to create interface Output for " << GetName()
 			<< std::endl;
     }
-    
+
   }
 
   void Configure( const std::string& ){}
   void Startup(){}
-  void Run(){ 
-    ProcessQueuedCommands(); 
+  void Run(){
+    ProcessQueuedCommands();
 
     t += GetPeriodicity();
     double dx = 0.1 * sin( t - cmnPI_2 ) + 0.1;
@@ -100,12 +101,14 @@ int main( int argc, char** argv ){
 
   mtsWAM WAM( "WAM", &can, osaWAM::WAM_7DOF, OSA_CPU4, 80 );
   WAM.Configure();
-  WAM.SetPositions( vctDynamicVector<double>(7, 
-					     0.0, -cmnPI_2, 0.0, cmnPI, 
+  WAM.SetPositions( vctDynamicVector<double>(7,
+					     0.0, -cmnPI_2, 0.0, cmnPI,
 					     0.0, 0.0, 0.0 ) );
   taskManager->AddComponent( &WAM );
 
-  std::string path(  CISST_SOURCE_ROOT"/cisst/etc/cisstRobot/" );
+  cmnPath path;
+  path.AddRelativeToCisstShare("/models/WAM");
+  std::string fname = path.Find("wam7.rob", cmnPath::READ);
 
   // Rotate the base
   vctMatrixRotation3<double> Rw0(  0.0,  0.0, -1.0,
@@ -117,7 +120,7 @@ int main( int argc, char** argv ){
   // Initial configuration
   vctDynamicVector<double> qinit( 7, 0.0 );
   qinit[1] = -cmnPI_2;
-  qinit[3] =  cmnPI;  
+  qinit[3] =  cmnPI;
 
   // Gain matrices
   vctDynamicMatrix<double> Kp(7, 7, 0.0), Kd(7, 7, 0.0);
@@ -129,9 +132,9 @@ int main( int argc, char** argv ){
   Kp[5][5] = 50;      Kd[5][5] = 0.8;
   Kp[6][6] = 10;      Kd[6][6] = .1;
 
-  mtsPDGC PDGC( "PDGC", 
+  mtsPDGC PDGC( "PDGC",
 		0.002,
-		path+"WAM/wam7.rob", 
+		fname,
 		Rtw0,
 		Kp,
 		Kd,
@@ -139,19 +142,19 @@ int main( int argc, char** argv ){
 		OSA_CPU3 );
   taskManager->AddComponent( &PDGC );
 
-  mtsTrajectory trajectory( "trajectory", 
+  mtsTrajectory trajectory( "trajectory",
 			    0.01,
-			    path+"wam7.rob", 
-			    Rtw0, 
+			    fname,
+			    Rtw0,
 			    qinit );
   taskManager->AddComponent( &trajectory );
 
-  SetPoints setpoints( path+"wam7.rob", Rtw0, qinit );
+  SetPoints setpoints( fname, Rtw0, qinit );
   taskManager->AddComponent( &setpoints );
 
   if( !taskManager->Connect( kb.GetName(),  "PDGCEnable",
 			     PDGC.GetName(),"Control") ){
-    std::cout << "Failed to connect: " 
+    std::cout << "Failed to connect: "
 	      << kb.GetName()   << "::PDGCEnable to "
 	      << PDGC.GetName() << "::Control" << std::endl;
     return -1;
@@ -159,23 +162,23 @@ int main( int argc, char** argv ){
 
   if( !taskManager->Connect( trajectory.GetName(), "Output",
 			     PDGC.GetName(),       "Input") ){
-    std::cout << "Failed to connect: " 
+    std::cout << "Failed to connect: "
 	      << trajectory.GetName() << "::Output to "
 	      << PDGC.GetName()       << "::Input" << std::endl;
     return -1;
   }
 
-  if( !taskManager->Connect( WAM.GetName(), "Input", 
+  if( !taskManager->Connect( WAM.GetName(), "Input",
 			     PDGC.GetName(), "Output" ) ){
-    std::cout << "Failed to connect: " 
+    std::cout << "Failed to connect: "
 	      << WAM.GetName()  << "::Input to "
 	      << PDGC.GetName() << "::Output" << std::endl;
     return -1;
   }
 
-  if( !taskManager->Connect( WAM.GetName(),  "Output", 
+  if( !taskManager->Connect( WAM.GetName(),  "Output",
 			     PDGC.GetName(), "Feedback" ) ){
-    std::cout << "Failed to connect: " 
+    std::cout << "Failed to connect: "
 	      << WAM.GetName()  << "::Output to "
 	      << PDGC.GetName() << "::Feedback" << std::endl;
     return -1;

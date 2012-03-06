@@ -1,4 +1,5 @@
 #include <cisstCommon/cmnGetChar.h>
+#include <cisstCommon/cmnPath.h>
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstOSAbstraction/osaGetTime.h>
 
@@ -41,13 +42,15 @@ int main( int argc, char** argv ){
   vctDynamicVector<double> qinit( 7, 0.0 );
   qinit[1] = -cmnPI_2;
   qinit[3] =  cmnPI;
-  
+
   if( WAM.SetPositions( qinit ) != osaWAM::ESUCCESS ){
     CMN_LOG_RUN_ERROR << "Failed to set position: " << qinit << std::endl;
     return -1;
   }
 
-  std::string path(  CISST_SOURCE_ROOT"/cisst/etc/cisstRobot/" );
+  cmnPath path;
+  path.AddRelativeToCisstShare("/models/WAM");
+  std::string fname = path.Find("wam7.rob", cmnPath::READ);
 
   // Rotate the base
   vctMatrixRotation3<double> Rw0(  0.0,  0.0, -1.0,
@@ -55,8 +58,8 @@ int main( int argc, char** argv ){
                                    1.0,  0.0,  0.0 );
   vctFixedSizeVector<double,3> tw0(0.0);
   vctFrame4x4<double> Rtw0( Rw0, tw0 );
-  
-  osaGravityCompensation GC( path+"WAM/wam7.rob", Rtw0 );
+
+  osaGravityCompensation GC( fname, Rtw0 );
 
   std::cout << "Activate the WAM" << std::endl;
   bool activated = false;
