@@ -1,7 +1,19 @@
+#
+# $Id$
+#
+# (C) Copyright 2011-2012 Johns Hopkins University (JHU), All Rights
+# Reserved.
+#
+# --- begin cisst license - do not edit ---
+#
+# This software is provided "as is" under an open source license, with
+# no warranty.  The complete license can be found in license.txt and
+# http://www.cisst.org/cisst/license.txt.
+#
+# --- end cisst license ---
 
-
-set( 
-  REQUIRED_CISST_LIBRARIES 
+set(
+  REQUIRED_CISST_LIBRARIES
   cisstCommon
   cisstVector
   cisstOSAbstraction
@@ -17,8 +29,8 @@ if( cisst_FOUND  )
   # load cisst configuration
   include( ${CISST_USE_FILE} )
 
-  cisst_find_component(sawCANBus REQUIRED)
-  cisst_find_component(sawBarrett REQUIRED)
+  cisst_find_saw_component(sawCANBus REQUIRED)
+  cisst_find_saw_component(sawBarrett REQUIRED)
 
   if(sawCANBus_FOUND  AND sawBarrett_FOUND)
 
@@ -41,16 +53,16 @@ if( cisst_FOUND  )
     target_link_libraries( mtsPuckExample    ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
     target_link_libraries( mtsWAMExample     ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
 
-    cisst_find_component( sawControllers )
-    cisst_find_component( sawTrajectories )
-    cisst_find_component( sawKeyboard )    
+    cisst_find_saw_component( sawControllers )
+    cisst_find_saw_component( sawTrajectories )
+    cisst_find_saw_component( sawKeyboard )
 
     if( sawControllers_FOUND AND sawKeyboard_FOUND AND sawTrajectories_FOUND )
-      link_directories(${sawControllers_LIBRARY_DIR} ${sawKeyboard_LIBRARY_DIR} ${sawTrajectories_LIBRARY_DIR} )  
+      link_directories(${sawControllers_LIBRARY_DIR} ${sawKeyboard_LIBRARY_DIR} ${sawTrajectories_LIBRARY_DIR} )
 
-      set( 
-        REQUIRED_SAW_COMPONENTS 
-        ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} 
+      set(
+        REQUIRED_SAW_COMPONENTS
+        ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES}
         sawControllers
         sawTrajectories
         sawKeyboard )
