@@ -1,5 +1,6 @@
-#include <cisstCommon/cmnGetChar.h>
 #include <cisstCommon/cmnPath.h>
+#include <cisstCommon/cmnGetChar.h>
+
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstOSAbstraction/osaGetTime.h>
 
@@ -15,7 +16,7 @@ int main( int argc, char** argv ){
 
   mlockall(MCL_CURRENT | MCL_FUTURE);
   RT_TASK task;
-  rt_task_shadow( &task, "mtsWAMGCExample", 99, 0 );
+  rt_task_shadow( &task, "mtsWAMGCExample", 60, 0 );
 
   mtsTaskManager* taskManager = mtsTaskManager::GetInstance();
 
@@ -34,8 +35,7 @@ int main( int argc, char** argv ){
   taskManager->AddComponent( &kb );
 
 
-  osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
-
+  osaRTSocketCAN can( "rtcan1", osaCANBus::RATE_1000 );
   if( can.Open() != osaCANBus::ESUCCESS ){
     CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;
     return -1;
@@ -43,14 +43,14 @@ int main( int argc, char** argv ){
 
   mtsWAM WAM( "WAM", &can, osaWAM::WAM_7DOF, OSA_CPU4, 80 );
   WAM.Configure();
-  WAM.SetPositions( vctDynamicVector<double>(7,
-					     0.0, -cmnPI_2, 0.0, cmnPI,
-					     0.0, 0.0, 0.0 ) );
+  WAM.SetPositions( vctDynamicVector<double>(7, 
+  					     0.0, -cmnPI_2, 0.0, cmnPI, 
+  					     0.0, -cmnPI_2, 0.0 ) );
   taskManager->AddComponent( &WAM );
+
 
   cmnPath path;
   path.AddRelativeToCisstShare("/models/WAM");
-  std::string fname = path.Find("wam7.rob", cmnPath::READ);
 
   // Rotate the base
   vctMatrixRotation3<double> Rw0(  0.0,  0.0, -1.0,
@@ -59,15 +59,15 @@ int main( int argc, char** argv ){
   vctFixedSizeVector<double,3> tw0(0.0);
   vctFrame4x4<double> Rtw0( Rw0, tw0 );
 
-  mtsGravityCompensation GC( "GC",
-			     0.002,
-			     fname,
+  mtsGravityCompensation GC( "GC", 
+			     0.002, 
+			     path.Find( "wam7.rob" ), 
 			     Rtw0,
 			     OSA_CPU3 );
   taskManager->AddComponent( &GC );
-
-  if( !taskManager->Connect( kb.GetName(), "GCEnable",
-			     GC.GetName(), "Control") ){
+ 
+ if( !taskManager->Connect( kb.GetName(), "GCEnable",
+			    GC.GetName(), "Control") ){
     std::cout << "Failed to connect: "
 	      << kb.GetName() << "::GCEnable to "
 	      << GC.GetName() << "::Control" << std::endl;
@@ -75,7 +75,7 @@ int main( int argc, char** argv ){
   }
 
   if( !taskManager->Connect( WAM.GetName(), "Input",
-			     GC.GetName(), "Output" ) ){
+			     GC.GetName(),  "Output" ) ){
     std::cout << "Failed to connect: "
 	      << WAM.GetName() << "::Input to "
 	      << GC.GetName()  << "::Output" << std::endl;
@@ -83,7 +83,7 @@ int main( int argc, char** argv ){
   }
 
   if( !taskManager->Connect( WAM.GetName(), "Output",
-			     GC.GetName(), "Input" ) ){
+			     GC.GetName(),  "Input" ) ){
     std::cout << "Failed to connect: "
 	      << WAM.GetName() << "::Output to "
 	      << GC.GetName()  << "::Input" << std::endl;
@@ -94,9 +94,6 @@ int main( int argc, char** argv ){
   taskManager->StartAll();
 
   pause();
-
-  taskManager->KillAll();
-  taskManager->Cleanup();
 
   return 0;
 }

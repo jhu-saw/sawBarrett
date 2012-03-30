@@ -90,7 +90,7 @@ void mtsWAM::Run(){
     CMN_LOG_RUN_ERROR << "Failed to get position for " << GetName() 
 		      << std::endl;
   }
-
+  qout.SetValid( true );
   if( osaWAM::SetTorques( tin.ForceTorque() ) != osaWAM::ESUCCESS ){
     CMN_LOG_RUN_ERROR << "Failed to get position for " << GetName() 
 		      << std::endl;

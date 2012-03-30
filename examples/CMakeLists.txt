@@ -34,6 +34,10 @@ if( cisst_FOUND  )
 
   if(sawCANBus_FOUND  AND sawBarrett_FOUND)
 
+     include_directories(
+       ${sawCANBus_INCLUDE_DIR}
+       ${sawBarrett_INCLUDE_DIR} )
+
     link_directories(${sawCANBus_LIBRARY_DIR})
 
     set( REQUIRED_SAW_COMPONENTS sawBarrett sawCANBus )
@@ -57,8 +61,19 @@ if( cisst_FOUND  )
     cisst_find_saw_component( sawTrajectories )
     cisst_find_saw_component( sawKeyboard )
 
-    if( sawControllers_FOUND AND sawKeyboard_FOUND AND sawTrajectories_FOUND )
-      link_directories(${sawControllers_LIBRARY_DIR} ${sawKeyboard_LIBRARY_DIR} ${sawTrajectories_LIBRARY_DIR} )
+    if( sawControllers_FOUND AND 
+	sawKeyboard_FOUND    AND 
+	sawTrajectories_FOUND )
+
+     include_directories(
+       ${sawKeyboard_INCLUDE_DIR}
+       ${sawControllers_INCLUDE_DIR}
+       ${sawTrajectories_INCLUDE_DIR} )
+
+      link_directories( 
+	${sawControllers_LIBRARY_DIR} 
+	${sawKeyboard_LIBRARY_DIR}
+	${sawTrajectories_LIBRARY_DIR} )
 
       set(
         REQUIRED_SAW_COMPONENTS
@@ -66,6 +81,7 @@ if( cisst_FOUND  )
         sawControllers
         sawTrajectories
         sawKeyboard )
+
 
       add_executable( osaWAMGCExample     osaWAMGCExample.cpp )
       add_executable( osaWAMPDGCExample   osaWAMPDGCExample.cpp )
@@ -81,7 +97,11 @@ if( cisst_FOUND  )
       target_link_libraries( mtsWAMMoveExample ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
       target_link_libraries( mtsWAMServer      ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
 
-    endif( sawControllers_FOUND AND sawKeyboard_FOUND AND sawTrajectories_FOUND )
-  endif(sawBarrett_FOUND and sawCANBus_FOUND)
+    endif( 
+      sawControllers_FOUND AND 
+      sawKeyboard_FOUND    AND 
+      sawTrajectories_FOUND )
+
+  endif( sawBarrett_FOUND and sawCANBus_FOUND )
 
 endif( cisst_FOUND AND sawBarrett_FOUND )

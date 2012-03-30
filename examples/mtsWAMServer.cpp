@@ -1,5 +1,6 @@
-#include <cisstCommon/cmnGetChar.h>
 #include <cisstCommon/cmnPath.h>
+#include <cisstCommon/cmnGetChar.h>
+
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstOSAbstraction/osaGetTime.h>
 
@@ -32,9 +33,12 @@ private:
   bool online;
 
   mtsInterfaceProvided*  input;
+  mtsInterfaceProvided* outputSE3;
   mtsInterfaceRequired* output;
 
-  prmPositionCartesianGet prmRtwn;
+  prmPositionCartesianGet prmCommand;   // Cartesian commands
+  prmPositionCartesianGet prmTelemetry; // Cartesian telemetry
+
   mtsFunctionWrite SetPositionCartesian;
 
   bool IsEnabled() const { return mtsEnabled; }
@@ -44,7 +48,7 @@ public:
   SetPoints( const std::string& robotfilename,
 	     const vctFrame4x4<double>& Rtw0,
 	     const vctDynamicVector<double>& qinit ) :
-    mtsTaskPeriodic( "Slave", 0.002, true ),
+    mtsTaskPeriodic( "Robot", 0.01, true ),
     manipulator( NULL ),
     q( qinit ),
     qready( qinit ),
@@ -81,14 +85,21 @@ public:
 
     input = AddInterfaceProvided( "Input" );
     if( input ){
-      StateTable.AddData( prmRtwn, "Enabled" );
-      input->AddCommandWriteState( StateTable, prmRtwn, "SetPositionCartesian");
+      StateTable.AddData( prmCommand, "Enabled" );
+      input->AddCommandWriteState(StateTable,prmCommand,"SetPositionCartesian");
     }
     else{
       CMN_LOG_RUN_ERROR << "Failed to create interface Input for " << GetName()
 			<< std::endl;
     }
-
+   
+    outputSE3 = AddInterfaceProvided( "OutputSE3" );
+    if( outputSE3 ){
+      StateTable.AddData( prmTelemetry, "Telemetry" );
+      outputSE3->AddCommandReadState( StateTable,
+				      prmTelemetry,
+				      "GetPositionCartesian" );
+    }
 
     output = AddInterfaceRequired( "Output" );
     if( output ){
@@ -97,7 +108,7 @@ public:
     else{
       CMN_LOG_RUN_ERROR << "Failed to create interface Output for " << GetName()
 			<< std::endl;
-    }
+    }    
 
   }
 
@@ -119,35 +130,48 @@ public:
 	    online = false;
 
 	    if( q[i] < qready[i] )
-	      { q[i] += 0.005; }
+	      { q[i] += 0.0005; }
 	    else if( qready[i] < q[i] )
-	      { q[i] -= 0.005; }
+	      { q[i] -= 0.0005; }
 
 	  }
 
 	}
 
+	std::cout << q << std::endl;
+	// this goes to the ikin
 	mtsFrm4x4 mtsRt( manipulator->ForwardKinematics( q ) );
 	SetPositionCartesian( mtsRt );
+
+	// this goes to the teleop
+	prmTelemetry.Position().FromRaw( mtsRt );
+	prmTelemetry.SetValid( true );
+
+	if( online )
+	  { std::cout << "System is online. 'q' to quit" << std::endl; }
 
       }
       else{
 
-	vctFrm3 frm3Rt;
-	prmRtwn.GetPosition( frm3Rt );
+	bool valid = false;
+	prmCommand.GetValid( valid );
 
-	vctQuaternionRotation3<double> R( frm3Rt.Rotation(), VCT_NORMALIZE );
-	mtsFrm4x4 mtsRt( vctFrame4x4<double>( R, frm3Rt.Translation() ) );
-	SetPositionCartesian( mtsRt );
+	if( valid ){
+
+	  vctFrm3 frm3Rt;
+	  prmCommand.GetPosition( frm3Rt );
+	  
+	  // this goes to the ikin
+	  vctQuaternionRotation3<double> R( frm3Rt.Rotation(), VCT_NORMALIZE );
+	  mtsFrm4x4 mtsRt( vctFrame4x4<double>( R, frm3Rt.Translation() ) );
+	  SetPositionCartesian( mtsRt );
+	  
+	  // return the same value to the telop
+	  prmTelemetry.Position().FromRaw( mtsRt );
+	  prmTelemetry.SetValid( true );
+	}
+
       }
-
-
-      /*
-      t += GetPeriodicity();
-      double dx = 0.2 * sin( t - cmnPI_2 ) + 0.2;
-      Rt[0][3] = x + -dx;
-
-      */
 
     }
 
@@ -161,7 +185,7 @@ int main( int argc, char** argv ){
 
   mlockall(MCL_CURRENT | MCL_FUTURE);
   RT_TASK task;
-  rt_task_shadow( &task, "mtsWAMPDGCExample", 89, 0 );
+  rt_task_shadow( &task, "mtsWAMPDGCExample", 40, 0 );
 
   cmnLogger::SetMask( CMN_LOG_ALLOW_ALL );
   cmnLogger::SetMaskFunction( CMN_LOG_ALLOW_ALL );
@@ -172,7 +196,7 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-  std::string process( "SlaveProcess" );
+  std::string process( "Slave" );
   mtsManagerLocal* taskManager = NULL;
 
   try{ taskManager = mtsTaskManager::GetInstance( argv[2], process ); }
@@ -188,31 +212,25 @@ int main( int argc, char** argv ){
   kb.AddKeyWriteFunction( 'M', "MoveEnable", "Enable", true );
   taskManager->AddComponent( &kb );
 
-
-
   // Initial configuration
   vctDynamicVector<double> qinit( 7, 0.0 );
   qinit[1] = -cmnPI_2;
-  qinit[3] =  cmnPI-0.01;
+  qinit[3] =  cmnPI-0.01;  
   qinit[5] = -cmnPI_2;
 
   osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
-  std::cout <<"opening" << std::endl;
   if( can.Open() != osaCANBus::ESUCCESS ){
     CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;
     return -1;
   }
-  std::cout <<"opening" << std::endl;
+
   mtsWAM WAM( "WAM", &can, osaWAM::WAM_7DOF, OSA_CPU4, 80 );
-  std::cout <<"opening" << std::endl;
   WAM.Configure();
-  std::cout <<"opening" << std::endl;
   WAM.SetPositions( qinit );
   taskManager->AddComponent( &WAM );
 
   cmnPath path;
-  path.AddRelativeToCisstShare("/models/WAM");
-  std::string fname = path.Find("wam7cutter.rob", cmnPath::READ);
+  path.AddRelativeToCisstShare("models/WAM");
 
   // Rotate the base
   vctMatrixRotation3<double> Rw0(  0.0,  0.0, -1.0,
@@ -233,7 +251,7 @@ int main( int argc, char** argv ){
 
   mtsPDGC PDGC( "PDGC",
 		0.00125,
-		fname,
+		path.Find( "wam7cutter.rob" ),
 		Rtw0,
 		Kp,
 		Kd,
@@ -241,19 +259,17 @@ int main( int argc, char** argv ){
 		OSA_CPU3 );
   taskManager->AddComponent( &PDGC );
 
-  fname = path.Find("wam7.rob", cmnPath::READ);
-
   mtsTrajectory traj( "trajectory",
 		      0.002,
-		      fname,
-		      Rtw0,
+		      path.Find( "wam7cutter.rob" ), 
+		      Rtw0, 
 		      qinit );
   taskManager->AddComponent( &traj );
 
-  SetPoints setpoints( fname, Rtw0, qinit );
+  SetPoints setpoints( path.Find( "wam7cutter.rob" ), Rtw0, qinit );
   taskManager->AddComponent( &setpoints );
 
-
+  // Connect the keyboard
   if( !taskManager->Connect( kb.GetName(),  "PDGCEnable",
 			     PDGC.GetName(),"Control") ){
     std::cout << "Failed to connect: "
@@ -270,7 +286,6 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-
   if( !taskManager->Connect( kb.GetName(),       "MoveEnable",
 			     setpoints.GetName(),"Control") ){
     std::cout << "Failed to connect: "
@@ -281,8 +296,7 @@ int main( int argc, char** argv ){
 
 
 
-
-
+  // connect the trajectory with setpoints
   if( !taskManager->Connect( traj.GetName(),      "Input",
 			     setpoints.GetName(), "Output" ) ){
     std::cout << "Failed to connect: "
@@ -293,6 +307,7 @@ int main( int argc, char** argv ){
 
 
 
+  // connect the trajectory to the controller
   if( !taskManager->Connect( traj.GetName(), "Output",
 			     PDGC.GetName(), "Input") ){
     std::cout << "Failed to connect: "
@@ -303,7 +318,7 @@ int main( int argc, char** argv ){
 
 
 
-
+  // connect the controller to the WAM
   if( !taskManager->Connect( WAM.GetName(), "Input",
 			     PDGC.GetName(), "Output" ) ){
     std::cout << "Failed to connect: "
@@ -321,13 +336,13 @@ int main( int argc, char** argv ){
   }
 
 
+
+
   taskManager->CreateAll();
   taskManager->StartAll();
 
+  std::cout << "Press 'q' to exit." << std::endl;
   pause();
-
-  taskManager->KillAll();
-  taskManager->Cleanup();
 
   return 0;
 }
