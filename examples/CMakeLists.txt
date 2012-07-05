@@ -49,6 +49,8 @@ if( cisst_FOUND  )
 
     add_executable( mtsPuckExample mtsPuckExample.cpp )
     add_executable( mtsWAMExample  mtsWAMExample.cpp )
+    add_executable( mtsWAMPosServer mtsWAMPosServer.cpp )
+
 
     target_link_libraries( osaPuckExample    ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
     target_link_libraries( osaGroupExample   ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
@@ -56,24 +58,27 @@ if( cisst_FOUND  )
     target_link_libraries( osaBH8_280Example ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
     target_link_libraries( mtsPuckExample    ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
     target_link_libraries( mtsWAMExample     ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
+    target_link_libraries( mtsWAMPosServer   ${REQUIRED_SAW_COMPONENTS} ${REQUIRED_CISST_LIBRARIES} )
+
+
 
     cisst_find_saw_component( sawControllers )
     cisst_find_saw_component( sawTrajectories )
     cisst_find_saw_component( sawKeyboard )
 
     if( sawControllers_FOUND AND 
-	sawKeyboard_FOUND    AND 
-	sawTrajectories_FOUND )
+        sawKeyboard_FOUND    AND
+        sawTrajectories_FOUND )
 
-     include_directories(
-       ${sawKeyboard_INCLUDE_DIR}
-       ${sawControllers_INCLUDE_DIR}
-       ${sawTrajectories_INCLUDE_DIR} )
+      include_directories(
+        ${sawKeyboard_INCLUDE_DIR}
+        ${sawControllers_INCLUDE_DIR}
+        ${sawTrajectories_INCLUDE_DIR} )
 
       link_directories( 
-	${sawControllers_LIBRARY_DIR} 
-	${sawKeyboard_LIBRARY_DIR}
-	${sawTrajectories_LIBRARY_DIR} )
+        ${sawControllers_LIBRARY_DIR}
+        ${sawKeyboard_LIBRARY_DIR}
+        ${sawTrajectories_LIBRARY_DIR} )
 
       set(
         REQUIRED_SAW_COMPONENTS
@@ -99,9 +104,9 @@ if( cisst_FOUND  )
 
     endif( 
       sawControllers_FOUND AND 
-      sawKeyboard_FOUND    AND 
+      sawKeyboard_FOUND    AND
       sawTrajectories_FOUND )
 
-  endif( sawBarrett_FOUND and sawCANBus_FOUND )
+  endif( sawCANBus_FOUND  AND sawBarrett_FOUND )
 
-endif( cisst_FOUND AND sawBarrett_FOUND )
+endif( cisst_FOUND )

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- This XML file stores the WAM robot initial position
+     -- home position (rad)
+     -- zeromag (magnetic encoder reading @home positin)
+-->
+
+<config>
+  <robot Name="WAM Right" NumOfJoint="7">
+    <Joint Number="0" Home="-0.0000" ZeroMag="213"/>
+    <Joint Number="1" Home="-1.6172" ZeroMag="26"/>
+    <Joint Number="2" Home="0.0141" ZeroMag="3682"/>
+    <Joint Number="3" Home="0.6591" ZeroMag="2026"/>
+    <Joint Number="4" Home="-0.0640" ZeroMag="2856"/>
+    <Joint Number="5" Home="0.9461" ZeroMag="2297"/>
+    <Joint Number="6" Home="0.1544" ZeroMag="2934"/>
+  </robot>
+</config>
+

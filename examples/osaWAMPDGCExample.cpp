@@ -89,11 +89,11 @@ int main( int argc, char** argv ){
     if( !activated ) {
       osaWAM::Mode mode;
       if( WAM.GetMode( mode ) != osaWAM::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to get mode" << std::endl;
-	return -1;
+        CMN_LOG_RUN_ERROR << "Failed to get mode" << std::endl;
+        return -1;
       }
       if( mode == osaWAM::MODE_ACTIVATED )
-	{ activated = true; }
+      { activated = true; }
     }
 
     // if pucks are activated, run the controller
@@ -101,8 +101,8 @@ int main( int argc, char** argv ){
     double t2 = osaGetTime();
     if( activated ){
       if( PDGC.Evaluate( qinit, q, tau, t2-t1 ) != osaPDGC::ESUCCESS ){
-	CMN_LOG_RUN_ERROR << "Failed to evaluate controller" << std::endl;
-	return -1;
+        CMN_LOG_RUN_ERROR << "Failed to evaluate controller" << std::endl;
+        return -1;
       }
     }
     t1 = t2;
