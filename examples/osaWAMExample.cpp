@@ -1,7 +1,5 @@
 #include <cisstOSAbstraction/osaSleep.h>
 #include <cisstOSAbstraction/osaGetTime.h>
-#include <cisstRobot/robManipulator.h>
-#include <cisstCommon/cmnPath.h>
 
 #include <sawBarrett/osaWAM.h>
 #include <sawCANBus/osaRTSocketCAN.h>
@@ -46,29 +44,6 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-
-#if 1
-  // Rotate the base
-  vctMatrixRotation3<double> Rw0(  0.0,  0.0, -1.0,
-                                   0.0,  1.0,  0.0,
-                                   1.0,  0.0,  0.0 );
-  vctFixedSizeVector<double,3> tw0(0.0);
-  vctFrame4x4<double> Rtw0( Rw0, tw0 );
-
-  cmnPath path;
-//  path.AddRelativeToCisstShare("models/WAM");
-//  path.AddRelativeToCisstRoot("share/models/WAM");
-//  path.Add(cmnPath::GetCisstRoot() + "share/models/WAM");
-  path.Add("/home/zihan/dev/cisst/source/share/models/WAM");
-
-  robManipulator *manipulator = new robManipulator( path.Find("wam7.rob"), Rtw0 );
-
-  std::cout << "robot file = " << path.Find("wam7.rob") << std::endl;
-
-#endif
-
-
-
   double t1 = osaGetTime();
   size_t cnt=0;
 
@@ -86,7 +61,6 @@ int main( int argc, char** argv ){
       return -1;
     }
 
-#if 0
     std::cout << "q: " << q << std::endl;
     cnt++;
     if( cnt == 1000 ){
@@ -95,24 +69,6 @@ int main( int argc, char** argv ){
       t1 = t2;
       cnt = 0;
     }
-#endif
-
-#if 1
-    vctFrame4x4<double> Rt;
-    Rt = manipulator->ForwardKinematics( q );
-
-
-//    std::cout << "q: " << q << std::endl;
-    cnt++;
-    if( cnt == 1000 ){
-      double t2 = osaGetTime();
-//      std::cout << 1000.0 / (t2 - t1) << std::endl;
-      t1 = t2;
-      cnt = 0;
-      std::cout << "Rt: " << std::endl << Rt << std::endl;
-    }
-#endif
-
 
   }
 

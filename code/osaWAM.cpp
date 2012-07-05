@@ -15,7 +15,6 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-//#include <sawBarrett/Barrett.h>
 #include <sawBarrett/osaWAM.h>
 #include <cisstCommon/cmnLogger.h>
 
@@ -257,7 +256,6 @@ osaWAM::Errno osaWAM::GetMode( osaWAM::Mode& mode ){
 
 }
 
-#if 0
 // set the motor positions 
 osaWAM::Errno osaWAM::SetPositions( const vctDynamicVector<double>& jq ){
 
@@ -304,89 +302,6 @@ osaWAM::Errno osaWAM::SetPositions( const vctDynamicVector<double>& jq ){
   
   return osaWAM::ESUCCESS;
 }
-
-#endif
-
-#if 1
-// set the motor positions
-osaWAM::Errno osaWAM::SetPositions( const vctDynamicVector<double>& jq ){
-
-  // sanity check
-  if( jq.size() != pucks.size() ){
-    CMN_LOG_RUN_ERROR << "Expected " << pucks.size() << " joint angles. "
-                      << "Got " << jq.size()
-                      << std::endl;
-    return osaWAM::EFAILURE;
-  }
-
-  // let the safety module ignore a few faults
-  // this is necessary because otherwise the safety module will monitor a large
-  // change of joint position in a short amount of time and trigger a velocity
-  // fault.
-  if( safetymodule.IgnoreFault( 8 ) != osaPuck::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to configure the safety module" << std::endl;
-    return osaWAM::EFAILURE;
-  }
-
-  // convert the joints positions to motor positions
-  vctDynamicVector<double> mq = JointsPos2MotorsPos( jq );
-
-  // ZC: fix init error based on calibration data
-  double zeromag[7] = {1000, 1100, 1200, 1300, 1400, 1500, 1600};
-  double errmag[7] = {0,0,0,0,0,0,0};
-
-  for(size_t i=0; i < pucks.size(); i++)
-  {
-    // Grab each motor's magnetic encoder value into curmag 
-    Barrett::Value curmag;
-
-    if( pucks[i].GetProperty( Barrett::MECHANGLE, curmag ) != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to get magnetic enc reading of puck#: "
-                        << (int)pucks[i].GetID()
-                        << std::endl;
-    }else{
-      std::cout << "Magnet Enc puck[" << (int)pucks[i].GetID() << "] = "
-                << curmag << std::endl;
-    }
-
-    // calculate errmag value
-    errmag[i] = zeromag[i] - curmag;
-    if (errmag[i] > 2048)
-      errmag[i] = errmag[i] - 4096;
-    else if (errmag[i] < -2048)
-      errmag[i] = errmag[i] + 4096;
-    errmag[i] = errmag[i] * 3.1415926 * 2.0 / 4096;
-
-    // fix the mpos
-    mq[i] = mq[i] - errmag[i];
-  }
-
-
-  // for each puck, send a position
-  for(size_t i=0; i<pucks.size(); i++){
-
-    // Set the motor position
-    if( pucks[i].SetPosition( mq[i] ) != osaPuck::ESUCCESS ){
-      CMN_LOG_RUN_ERROR << "Failed to set pos of puck#: "
-                        << (int)pucks[i].GetID()
-                        << std::endl;
-    }
-
-  }
-
-  // let the safety module ignore a few faults
-  // this is necessary because otherwise the safety module will monitor a large
-  // change of joint position in a short amount of time and trigger a velocity
-  // fault.
-  if( safetymodule.IgnoreFault( 1 ) != osaPuck::ESUCCESS ){
-    CMN_LOG_RUN_ERROR << "Failed to configure the safety module" << std::endl;
-    return osaWAM::EFAILURE;
-  }
-
-  return osaWAM::ESUCCESS;
-}
-#endif
-
 
 
 // query the joint positions

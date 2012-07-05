@@ -80,20 +80,19 @@ int main( int argc, char** argv ){
     if( !activated ) {
       osaWAM::Mode mode;
       if( WAM.GetMode( mode ) != osaWAM::ESUCCESS ){
-        CMN_LOG_RUN_ERROR << "Failed to get mode" << std::endl;
-        return -1;
+	CMN_LOG_RUN_ERROR << "Failed to get mode" << std::endl;
+	return -1;
       }
-      if( mode == osaWAM::MODE_ACTIVATED ){
-        activated = true;
-      }
+      if( mode == osaWAM::MODE_ACTIVATED )
+	{ activated = true; }
     }
 
     // if pucks are activated, run the controller
     vctDynamicVector<double> tau( q.size(), 0.0 );
     if( activated ){
       if( GC.Evaluate( q, tau ) != osaGravityCompensation::ESUCCESS ){
-        CMN_LOG_RUN_ERROR << "Failed to evaluate controller" << std::endl;
-        return -1;
+	CMN_LOG_RUN_ERROR << "Failed to evaluate controller" << std::endl;
+	return -1;
       }
     }
 

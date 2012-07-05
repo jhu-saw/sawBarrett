@@ -8,7 +8,3 @@ set(
 add_subdirectory( code )
 add_subdirectory( examples )
 
-
-if (CISST_HAS_QT)
-  add_subdirectory( codeQt )
-endif (CISST_HAS_QT)

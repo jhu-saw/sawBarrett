@@ -46,18 +46,18 @@ private:
 public:
 
   SetPoints( const std::string& robotfilename,
-             const vctFrame4x4<double>& Rtw0,
-             const vctDynamicVector<double>& qinit ) :
-  mtsTaskPeriodic( "Robot", 0.01, true ),
-  manipulator( NULL ),
-  q( qinit ),
-  qready( qinit ),
-  t( 0.0 ),
-  ctl( NULL ),
-  mtsEnabled( false ),
-  online( false ),
-  input( NULL ),
-  output( NULL ){
+	     const vctFrame4x4<double>& Rtw0,
+	     const vctDynamicVector<double>& qinit ) :
+    mtsTaskPeriodic( "Robot", 0.01, true ),
+    manipulator( NULL ),
+    q( qinit ),
+    qready( qinit ),
+    t( 0.0 ),
+    ctl( NULL ),
+    mtsEnabled( false ),
+    online( false ),
+    input( NULL ),
+    output( NULL ){
 
     manipulator = new robManipulator( robotfilename, Rtw0 );
 
@@ -80,7 +80,7 @@ public:
     }
     else{
       CMN_LOG_RUN_ERROR << "Failed to create interface Control for "<< GetName()
-          << std::endl;
+			<< std::endl;
     }
 
     input = AddInterfaceProvided( "Input" );
@@ -90,15 +90,15 @@ public:
     }
     else{
       CMN_LOG_RUN_ERROR << "Failed to create interface Input for " << GetName()
-          << std::endl;
+			<< std::endl;
     }
-
+   
     outputSE3 = AddInterfaceProvided( "OutputSE3" );
     if( outputSE3 ){
       StateTable.AddData( prmTelemetry, "Telemetry" );
       outputSE3->AddCommandReadState( StateTable,
-                                      prmTelemetry,
-                                      "GetPositionCartesian" );
+				      prmTelemetry,
+				      "GetPositionCartesian" );
     }
 
     output = AddInterfaceRequired( "Output" );
@@ -107,7 +107,7 @@ public:
     }
     else{
       CMN_LOG_RUN_ERROR << "Failed to create interface Output for " << GetName()
-          << std::endl;
+			<< std::endl;
     }    
 
   }
@@ -121,55 +121,55 @@ public:
 
       if( !online ){
 
-        online = true;
+	online = true;
 
-        for( size_t i=0; i<qready.size(); i++ ){
+	for( size_t i=0; i<qready.size(); i++ ){
 
-          if( 0.015 < fabs( q[i] - qready[i] ) ){
+	  if( 0.015 < fabs( q[i] - qready[i] ) ){
 
-            online = false;
+	    online = false;
 
-            if( q[i] < qready[i] )
-            { q[i] += 0.0005; }
-            else if( qready[i] < q[i] )
-            { q[i] -= 0.0005; }
+	    if( q[i] < qready[i] )
+	      { q[i] += 0.0005; }
+	    else if( qready[i] < q[i] )
+	      { q[i] -= 0.0005; }
 
-          }
+	  }
 
-        }
+	}
 
-        std::cout << q << std::endl;
-        // this goes to the ikin
-        mtsFrm4x4 mtsRt( manipulator->ForwardKinematics( q ) );
-        SetPositionCartesian( mtsRt );
+	std::cout << q << std::endl;
+	// this goes to the ikin
+	mtsFrm4x4 mtsRt( manipulator->ForwardKinematics( q ) );
+	SetPositionCartesian( mtsRt );
 
-        // this goes to the teleop
-        prmTelemetry.Position().FromRaw( mtsRt );
-        prmTelemetry.SetValid( true );
+	// this goes to the teleop
+	prmTelemetry.Position().FromRaw( mtsRt );
+	prmTelemetry.SetValid( true );
 
-        if( online )
-        { std::cout << "System is online. 'q' to quit" << std::endl; }
+	if( online )
+	  { std::cout << "System is online. 'q' to quit" << std::endl; }
 
       }
       else{
 
-        bool valid = false;
-        prmCommand.GetValid( valid );
+	bool valid = false;
+	prmCommand.GetValid( valid );
 
-        if( valid ){
+	if( valid ){
 
-          vctFrm3 frm3Rt;
-          prmCommand.GetPosition( frm3Rt );
-
-          // this goes to the ikin
-          vctQuaternionRotation3<double> R( frm3Rt.Rotation(), VCT_NORMALIZE );
-          mtsFrm4x4 mtsRt( vctFrame4x4<double>( R, frm3Rt.Translation() ) );
-          SetPositionCartesian( mtsRt );
-
-          // return the same value to the telop
-          prmTelemetry.Position().FromRaw( mtsRt );
-          prmTelemetry.SetValid( true );
-        }
+	  vctFrm3 frm3Rt;
+	  prmCommand.GetPosition( frm3Rt );
+	  
+	  // this goes to the ikin
+	  vctQuaternionRotation3<double> R( frm3Rt.Rotation(), VCT_NORMALIZE );
+	  mtsFrm4x4 mtsRt( vctFrame4x4<double>( R, frm3Rt.Translation() ) );
+	  SetPositionCartesian( mtsRt );
+	  
+	  // return the same value to the telop
+	  prmTelemetry.Position().FromRaw( mtsRt );
+	  prmTelemetry.SetValid( true );
+	}
 
       }
 
@@ -250,20 +250,20 @@ int main( int argc, char** argv ){
   Kp[6][6] = 10;      Kd[6][6] = .1;
 
   mtsPDGC PDGC( "PDGC",
-                0.00125,
-                path.Find( "wam7cutter.rob" ),
-                Rtw0,
-                Kp,
-                Kd,
-                qinit,
-                OSA_CPU3 );
+		0.00125,
+		path.Find( "wam7cutter.rob" ),
+		Rtw0,
+		Kp,
+		Kd,
+		qinit,
+		OSA_CPU3 );
   taskManager->AddComponent( &PDGC );
 
   mtsTrajectory traj( "trajectory",
-                      0.002,
-                      path.Find( "wam7cutter.rob" ),
-                      Rtw0,
-                      qinit );
+		      0.002,
+		      path.Find( "wam7cutter.rob" ), 
+		      Rtw0, 
+		      qinit );
   taskManager->AddComponent( &traj );
 
   SetPoints setpoints( path.Find( "wam7cutter.rob" ), Rtw0, qinit );
@@ -271,7 +271,7 @@ int main( int argc, char** argv ){
 
   // Connect the keyboard
   if( !taskManager->Connect( kb.GetName(),  "PDGCEnable",
-                             PDGC.GetName(),"Control") ){
+			     PDGC.GetName(),"Control") ){
     std::cout << "Failed to connect: "
 	      << kb.GetName()   << "::PDGCEnable to "
 	      << PDGC.GetName() << "::Control" << std::endl;
@@ -279,7 +279,7 @@ int main( int argc, char** argv ){
   }
 
   if( !taskManager->Connect( kb.GetName(),  "TrajEnable",
-                             traj.GetName(),"Control") ){
+			     traj.GetName(),"Control") ){
     std::cout << "Failed to connect: "
 	      << kb.GetName()   << "::TrajEnable to "
 	      << traj.GetName() << "::Control" << std::endl;
@@ -287,7 +287,7 @@ int main( int argc, char** argv ){
   }
 
   if( !taskManager->Connect( kb.GetName(),       "MoveEnable",
-                             setpoints.GetName(),"Control") ){
+			     setpoints.GetName(),"Control") ){
     std::cout << "Failed to connect: "
 	      << kb.GetName()        << "::TrajEnable to "
 	      << setpoints.GetName() << "::Control" << std::endl;
@@ -298,7 +298,7 @@ int main( int argc, char** argv ){
 
   // connect the trajectory with setpoints
   if( !taskManager->Connect( traj.GetName(),      "Input",
-                             setpoints.GetName(), "Output" ) ){
+			     setpoints.GetName(), "Output" ) ){
     std::cout << "Failed to connect: "
 	      << traj.GetName()      << "::Input to "
 	      << setpoints.GetName() << "::Output" << std::endl;
@@ -309,7 +309,7 @@ int main( int argc, char** argv ){
 
   // connect the trajectory to the controller
   if( !taskManager->Connect( traj.GetName(), "Output",
-                             PDGC.GetName(), "Input") ){
+			     PDGC.GetName(), "Input") ){
     std::cout << "Failed to connect: "
 	      << traj.GetName() << "::Output to "
 	      << PDGC.GetName() << "::Input" << std::endl;
@@ -320,7 +320,7 @@ int main( int argc, char** argv ){
 
   // connect the controller to the WAM
   if( !taskManager->Connect( WAM.GetName(), "Input",
-                             PDGC.GetName(), "Output" ) ){
+			     PDGC.GetName(), "Output" ) ){
     std::cout << "Failed to connect: "
 	      << WAM.GetName()  << "::Input to "
 	      << PDGC.GetName() << "::Output" << std::endl;
@@ -328,7 +328,7 @@ int main( int argc, char** argv ){
   }
 
   if( !taskManager->Connect( WAM.GetName(),  "Output",
-                             PDGC.GetName(), "Feedback" ) ){
+			     PDGC.GetName(), "Feedback" ) ){
     std::cout << "Failed to connect: "
 	      << WAM.GetName()  << "::Output to "
 	      << PDGC.GetName() << "::Feedback" << std::endl;
