@@ -8,9 +8,7 @@
 #include <cisstOSAbstraction/osaGetTime.h>
 
 #include <sawBarrett/mtsWAM.h>
-#include <sawCANBus/osaRTSocketCAN.h>
-#include <native/task.h>
-#include <sys/mman.h>
+#include <sawCANBus/osaSocketCAN.h>
 
 class WAMprobe : public mtsTaskPeriodic {
 
@@ -54,9 +52,6 @@ public:
 
 int main( int argc, char** argv ){
 
-  mlockall(MCL_CURRENT | MCL_FUTURE);
-  rt_task_shadow( NULL, "mtsWAMTest", 80, 0 );
-
   mtsTaskManager* taskManager = mtsTaskManager::GetInstance();
 
   cmnLogger::SetMask( CMN_LOG_ALLOW_ALL );
@@ -68,7 +63,7 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-  osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
+  osaSocketCAN can( argv[1], osaCANBus::RATE_1000 );
 
   if( can.Open() != osaCANBus::ESUCCESS ){
     CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;

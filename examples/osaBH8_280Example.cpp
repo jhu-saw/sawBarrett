@@ -3,15 +3,9 @@
 #include <cisstOSAbstraction/osaGetTime.h>
 
 #include <sawBarrett/osaBH8_280.h>
-#include <sawCANBus/osaRTSocketCAN.h>
-#include <native/task.h>
-#include <sys/mman.h>
+#include <sawCANBus/osaSocketCAN.h>
 
 int main( int argc, char** argv ){
-
-  mlockall(MCL_CURRENT | MCL_FUTURE);
-  RT_TASK task;
-  rt_task_shadow( &task, "GroupTest", 99, 0 );
 
   cmnLogger::SetMask( CMN_LOG_ALLOW_ALL );
   cmnLogger::SetMaskFunction( CMN_LOG_ALLOW_ALL );
@@ -22,7 +16,7 @@ int main( int argc, char** argv ){
     return -1;
   }
 
-  osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
+  osaSocketCAN can( argv[1], osaCANBus::RATE_1000 );
 
   if( can.Open() != osaCANBus::ESUCCESS ){
     CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;

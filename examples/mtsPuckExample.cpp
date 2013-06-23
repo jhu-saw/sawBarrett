@@ -6,11 +6,7 @@
 #include <cisstCommon/cmnGetChar.h>
 
 #include <sawBarrett/mtsPuck.h>
-#include <sawCANBus/osaRTSocketCAN.h>
-
-#include <native/task.h>
-#include <sys/mman.h>
-
+#include <sawCANBus/osaSocketCAN.h>
 
 // A client CAN task that read/write from/to a mtsCAN component
 class Puckclient : public mtsTaskPeriodic{
@@ -62,10 +58,6 @@ public:
 
 int main( int argc, char** argv ){
 
-  // Xenomai stuff
-  mlockall(MCL_CURRENT | MCL_FUTURE);
-  rt_task_shadow( NULL, "mtsPuckTest", 80, 0 );
-
   cmnLogger::SetMask( CMN_LOG_ALLOW_ALL );
   cmnLogger::SetMaskFunction( CMN_LOG_ALLOW_ALL );
   cmnLogger::SetMaskDefaultLog( CMN_LOG_ALLOW_ALL );
@@ -79,7 +71,7 @@ int main( int argc, char** argv ){
   mtsManagerLocal *taskManager;
   taskManager = mtsManagerLocal::GetInstance();
 
-  osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
+  osaSocketCAN can( argv[1], osaCANBus::RATE_1000 );
   if( can.Open() != osaCANBus::ESUCCESS ){
     std::cerr << argv[0] << ": Failed to open device " << argv[1] << std::endl;
     return -1;
