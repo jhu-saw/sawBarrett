@@ -30,15 +30,31 @@ if( cisst_FOUND )
   cisst_find_saw_component( sawCANBus REQUIRED )
 
   if( sawCANBus_FOUND )
+
+    # include sawCANBus
+    include_directories(${sawCANBus_INCLUDE_DIR})
+    link_directories(${sawCANBus_LIBRARY_DIR})
+
+    # create/configure file for find_package (sawBarret)
+    set(sawBarrett_INCLUDE_DIR "${sawBarrett_SOURCE_DIR}/include")
+    set(sawBarrett_LIBRARY_DIR "${LIBRARY_OUTPUT_PATH}")
+    set(sawBarrett_LIBRARIES sawBarrett)
+
+    include_directories (${sawBarrett_INCLUDE_DIR})
+    set (sawBarrett_HEADER_DIR "${sawBarrett_INCLUDE_DIR}/sawBarrett")
+
+    message(STATUS "sawBarrett_SOURCE_DIR = " ${sawBarrett_SOURCE_DIR})
+    message(STATUS "sawBarrett_INCLUDE_DIR = " ${sawBarrett_INCLUDE_DIR})
+
     set(
       HEADER_FILES
-      ../Barrett.h
-      ../osaPuck.h
-      ../osaGroup.h
-      ../osaWAM.h
-      ../osaBH8_280.h
-      ../mtsPuck.h
-      ../mtsWAM.h )
+      ${sawBarrett_HEADER_DIR}/Barrett.h
+      ${sawBarrett_HEADER_DIR}/osaPuck.h
+      ${sawBarrett_HEADER_DIR}/osaGroup.h
+      ${sawBarrett_HEADER_DIR}/osaWAM.h
+      ${sawBarrett_HEADER_DIR}/osaBH8_280.h
+      ${sawBarrett_HEADER_DIR}/mtsPuck.h
+      ${sawBarrett_HEADER_DIR}/mtsWAM.h )
 
     set(
       SOURCE_FILES
@@ -51,16 +67,11 @@ if( cisst_FOUND )
 
 
     add_library( sawBarrett ${HEADER_FILES} ${SOURCE_FILES} )
-    cisst_target_link_libraries( sawBarrett ${REQUIRED_CISST_LIBRARIES} )
-
-    # create/configure file for find_package (sawNDITracker)
-    set(sawBarrett_INCLUDE_DIR "${sawComponents_SOURCE_DIR}" "${sawComponents_BINARY_DIR}")
-    set(sawBarrett_LIBRARY_DIR "${LIBRARY_OUTPUT_PATH}")
-    set(sawBarrett_LIBRARIES sawBarrett)
+    cisst_target_link_libraries( sawBarrett ${REQUIRED_CISST_LIBRARIES} )    
 
     configure_file(
       "${CMAKE_CURRENT_SOURCE_DIR}/sawBarrettConfig.cmake.in"
-      "${sawComponents_BINARY_DIR}/sawBarrettConfig.cmake"
+      "${sawBarret_BINARY_DIR}/sawBarrettConfig.cmake"
       @ONLY@ )
 
     # Install targets for headers and library
@@ -75,4 +86,5 @@ if( cisst_FOUND )
     install( FILES "${sawComponents_BINARY_DIR}/sawBarrettConfig.cmake"
       DESTINATION "${CISST_CMAKE_INSTALL_SUFFIX}/saw")
   endif(sawCANBus_FOUND)
+  
 endif( cisst_FOUND )
