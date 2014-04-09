@@ -70,7 +70,7 @@ if( cisst_FOUND )
 
     configure_file(
       "${CMAKE_CURRENT_SOURCE_DIR}/sawBarrettConfig.cmake.in"
-      "${sawBarret_BINARY_DIR}/sawBarrettConfig.cmake"
+      "${sawBarrett_BINARY_DIR}/sawBarrettConfig.cmake"
       @ONLY@ )
 
     # Install targets for headers and library
