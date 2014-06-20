@@ -10,7 +10,7 @@ int main( int argc, char** argv ){
   cmnLogger::SetMaskDefaultLog( CMN_LOG_ALLOW_ALL );
 
   if( argc != 3 ){
-    std::cerr << "Usage: " << argv[0] << " rtcan[?] PID" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " can[?] PID" << std::endl;
     return -1;
   }
 

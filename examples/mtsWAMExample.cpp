@@ -59,7 +59,7 @@ int main( int argc, char** argv ){
   cmnLogger::SetMaskDefaultLog( CMN_LOG_ALLOW_ALL );
 
   if( argc != 2 ){
-    std::cout << "Usage: " << argv[0] << " rtcan[0-1]" << std::endl;
+    std::cout << "Usage: " << argv[0] << " can[0-1]" << std::endl;
     return -1;
   }
 

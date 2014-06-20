@@ -4,13 +4,17 @@
 #include <cisstOSAbstraction/osaGetTime.h>
 
 #include <sawKeyboard/mtsKeyboard.h>
-#include <sawCANBus/osaRTSocketCAN.h>
 #include <sawBarrett/mtsWAM.h>
 #include <sawControllers/mtsPDGC.h>
 #include <sawTrajectories/mtsTrajectory.h>
 
+#if (CISST_OS == CISST_LINUX_XENOMAI)
 #include <native/task.h>
 #include <sys/mman.h>
+#include <sawCANBus/osaRTSocketCAN.h>
+#else
+#include <sawCANBus/osaSocketCAN.h>
+#endif
 
 class SetPoints : public mtsTaskPeriodic {
 
@@ -71,9 +75,11 @@ public:
 
 int main( int argc, char** argv ){
 
+#if (CISST_OS == CISST_LINUX_XENOMAI)
   mlockall(MCL_CURRENT | MCL_FUTURE);
   RT_TASK task;
   rt_task_shadow( &task, "mtsWAMPDGCExample", 99, 0 );
+#endif
 
   mtsTaskManager* taskManager = mtsTaskManager::GetInstance();
 
@@ -82,7 +88,7 @@ int main( int argc, char** argv ){
   cmnLogger::SetMaskDefaultLog( CMN_LOG_ALLOW_ALL );
 
   if( argc != 2 ){
-    std::cout << "Usage: " << argv[0] << " rtcan[0-1]" << std::endl;
+    std::cout << "Usage: " << argv[0] << " can[0-1]" << std::endl;
     return -1;
   }
 
@@ -91,8 +97,11 @@ int main( int argc, char** argv ){
   kb.AddKeyWriteFunction( 'C', "PDGCEnable", "Enable", true );
   taskManager->AddComponent( &kb );
 
-
+#if (CISST_OS == CISST_LINUX_XENOMAI)
   osaRTSocketCAN can( argv[1], osaCANBus::RATE_1000 );
+#else
+  osaSocketCAN can( argv[1], osaCANBus::RATE_1000 );
+#endif
 
   if( can.Open() != osaCANBus::ESUCCESS ){
     CMN_LOG_RUN_ERROR << argv[0] << "Failed to open " << argv[1] << std::endl;
